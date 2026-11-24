@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sunny Side Luxury Spa · Planificador</title>
-<meta name="description" content="Planificador de costos de la jornada de un spa de lujo (spa ficticio, cifras de simulación). Proyecto final ADMI 1301.">
+<title>Planificador de costos para spas</title>
+<meta name="description" content="Planificador de costos de la jornada para cualquier spa: cada spa escribe sus datos y la app calcula personal, costos y ganancia operativa. Proyecto final ADMI 1301.">
 <meta name="theme-color" content="#2E2620">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Sunny Spa">
+<meta name="apple-mobile-web-app-title" content="Costos Spa">
 <style>
   :root {
     --fondo: #FBF7EF;
@@ -47,6 +47,7 @@
     line-height: 1.15;
     margin: 0 0 4px;
   }
+  header .sobre { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #D9B96A; margin: 0 0 6px; }
   header p { margin: 0; color: #D9B96A; font-size: 15px; }
   .aviso {
     background: var(--arena);
@@ -54,6 +55,10 @@
     font-size: 13px;
     padding: 8px 20px;
     border-bottom: 1px solid var(--linea);
+  }
+  .aviso button {
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--oro-texto);
+    background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline;
   }
   main { max-width: 760px; margin: 0 auto; padding: 18px 16px 40px; }
 
@@ -71,8 +76,8 @@
     background: transparent;
     color: var(--suave);
     font: inherit;
-    font-size: 15px;
-    padding: 10px 6px;
+    font-size: 14px;
+    padding: 10px 2px;
     border-radius: 9px;
     cursor: pointer;
   }
@@ -187,6 +192,30 @@
     border-radius: 50%; animation: gira 1s linear infinite;
   }
   @keyframes gira { to { transform: rotate(360deg); } }
+  /* Formulario "Mi spa" */
+  .form-spa label { font-size: 15px; margin-bottom: 4px; }
+  .form-spa input[type="text"] { font-size: 18px; padding: 10px 12px; width: 100%; }
+  .form-spa .fila { margin-bottom: 14px; }
+  .form-spa .ayuda { font-size: 13px; color: var(--suave); margin: 0 0 14px; }
+  .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .trat { background: #FFFDF8; border: 1px solid var(--linea); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .trat-cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .trat-cab b { font-family: Georgia, serif; font-weight: 400; font-size: 17px; }
+  .boton-chico {
+    font: inherit; font-size: 14px; background: transparent; color: var(--suave);
+    border: 1px solid var(--linea); border-radius: 999px; padding: 5px 12px; cursor: pointer;
+  }
+  .auto { font-size: 15px; color: var(--suave); background: var(--arena); border-radius: 10px; padding: 12px; }
+  .boton-sec {
+    font: inherit; font-size: 16px; font-weight: 600; color: var(--oro-texto); background: transparent;
+    border: 1.5px solid var(--oro); border-radius: 10px; padding: 11px 16px; cursor: pointer;
+  }
+  .acciones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .exito { border: 1.5px solid var(--salvia); background: #EEF4EF; border-radius: 12px; padding: 14px; margin-top: 16px; font-size: 15px; }
+  .exito p { margin: 4px 0 8px; }
+  .alerta ul { margin: 6px 0 0; padding-left: 20px; font-size: 15px; }
+  .alerta.suave { border-color: var(--oro); background: #FBF5E6; }
+  .alerta.suave h3 { color: var(--oro-texto); }
   [hidden] { display: none !important; }
   footer { text-align: center; font-size: 12.5px; color: var(--suave); padding: 0 16px 28px; }
 </style>
@@ -194,10 +223,11 @@
 <body>
 
 <header>
-  <h1>Sunny Side Luxury Spa</h1>
-  <p>Planificador de costos de la jornada</p>
+  <div class="sobre">Planificador de costos para spas</div>
+  <h1 id="nombre-spa">Cargando…</h1>
+  <p>Costos y ganancia operativa de la jornada</p>
 </header>
-<div class="aviso">Spa ficticio. Todas las cifras son supuestos de simulación del grupo, no datos reales.</div>
+<div class="aviso" id="aviso"></div>
 
 <main>
   <div id="cargando" role="status">
@@ -209,7 +239,8 @@
     <div class="pestanas" role="tablist">
       <button role="tab" id="t-jornada" aria-selected="true" data-vista="jornada">Jornada</button>
       <button role="tab" id="t-escenarios" aria-selected="false" data-vista="escenarios">Escenarios</button>
-      <button role="tab" id="t-supuestos" aria-selected="false" data-vista="supuestos">Supuestos</button>
+      <button role="tab" id="t-supuestos" aria-selected="false" data-vista="supuestos">Datos</button>
+      <button role="tab" id="t-mispa" aria-selected="false" data-vista="mispa">Mi spa</button>
     </div>
 
     <section id="vista-jornada">
@@ -219,25 +250,26 @@
           <input type="text" id="clientes" inputmode="numeric" placeholder="Ej: 10" maxlength="4">
           <button class="boton" type="submit">Calcular</button>
         </div>
-        <div class="atajos" aria-label="Ejemplos rápidos">
-          <span style="font-size:14px;color:var(--suave);padding:6px 0">Probar con:</span>
-          <button type="button" data-n="8">8</button>
-          <button type="button" data-n="16">16</button>
-          <button type="button" data-n="24">24</button>
-          <button type="button" data-n="30">30</button>
-        </div>
+        <div class="atajos" id="atajos" aria-label="Ejemplos rápidos"></div>
       </form>
       <div id="resultado"></div>
     </section>
 
     <section id="vista-escenarios" class="escenarios" hidden></section>
     <section id="vista-supuestos" hidden></section>
+    <section id="vista-mispa" hidden>
+      <h2 style="margin-top:0">Datos de su spa</h2>
+      <p class="nota" style="margin-top:0">Escriba los datos de su spa y la app calculará con ellos. Se guardan solo en este
+        dispositivo. Los valores de ejemplo en gris son de un spa ficticio.</p>
+      <form id="form-spa" class="form-spa" autocomplete="off" novalidate></form>
+    </section>
   </div>
 </main>
 
 <footer>
   Proyecto final ADMI 1301 · Introducción a la Programación · Universidad de los Andes<br>
-  Los cálculos están escritos en Python (archivo <code>app.py</code>) y se ejecutan en tu dispositivo.
+  Los cálculos están escritos en Python (archivo <code>app.py</code>) y se ejecutan en su dispositivo.<br>
+  Los datos de su spa no salen del dispositivo.
 </footer>
 
 <script src="pyodide/pyodide.js"></script>
@@ -247,6 +279,8 @@
 
 let py = null;
 let funciones = {};
+let estado = null;                       // datos del spa activo (los entrega Python)
+const CLAVE_GUARDADO = "planificador_spa_v1";
 
 function llamar(nombre, ...argumentos) {
   const proxy = funciones[nombre](...argumentos);
@@ -255,33 +289,88 @@ function llamar(nombre, ...argumentos) {
   return datos;
 }
 
+// Escribe un texto de forma segura dentro del HTML (los nombres los escribe el usuario)
+function esc(texto) {
+  return String(texto).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 async function iniciar() {
   try {
     py = await loadPyodide({ indexURL: "pyodide/" });
     const codigo = await (await fetch("app.py")).text();
     py.runPython(codigo);
-    funciones.consultar_jornada = py.globals.get("consultar_jornada");
-    funciones.comparar_escenarios = py.globals.get("comparar_escenarios");
-    funciones.obtener_supuestos = py.globals.get("obtener_supuestos");
+    for (const n of ["consultar_jornada", "comparar_escenarios", "obtener_supuestos", "configurar_spa",
+                     "usar_ejemplo", "estado_spa", "datos_del_spa", "datos_del_ejemplo"]) {
+      funciones[n] = py.globals.get(n);
+    }
+
+    // Si el spa ya guardó sus datos en este dispositivo, se usan; si no, se muestra el ejemplo
+    let activo = null;
+    try {
+      const guardado = localStorage.getItem(CLAVE_GUARDADO);
+      if (guardado) {
+        const r = llamar("configurar_spa", guardado);
+        if (r.estado === "ok") activo = r; else localStorage.removeItem(CLAVE_GUARDADO);
+      }
+    } catch (e) { /* sin almacenamiento: se usa el ejemplo */ }
+    if (activo === null) activo = llamar("usar_ejemplo");
+
+    aplicarSpa(activo);
+    pintarFormulario(activo.es_ejemplo ? formularioVacio() : llamar("datos_del_spa"));
 
     document.getElementById("cargando").hidden = true;
     document.getElementById("app").hidden = false;
     document.documentElement.setAttribute("data-listo", "si");
   } catch (e) {
     document.getElementById("mensaje-carga").textContent =
-      "No se pudo cargar Python. Revisa tu conexión y recarga la página.";
+      "No se pudo cargar Python. Revise su conexión y recargue la página.";
     console.error(e);
   }
 }
 
+/* ---------- Spa activo: encabezado, aviso y atajos ---------- */
+function aplicarSpa(e) {
+  estado = e;
+  document.getElementById("nombre-spa").textContent = e.nombre;
+  document.title = e.nombre + " · Planificador de costos";
+
+  document.getElementById("aviso").innerHTML = e.es_ejemplo
+    ? `Spa de ejemplo (ficticio): es el cliente de muestra del proyecto y sus cifras son supuestos de simulación.
+       <button type="button" data-ir="mispa">Usar los datos de mi spa →</button>`
+    : `Calculando con los datos de <b>${esc(e.nombre)}</b>. Es una estimación: no incluye arriendo, servicios públicos ni impuestos.
+       <button type="button" data-ir="mispa">Editar datos</button>`;
+
+  document.getElementById("atajos").innerHTML =
+    `<span style="font-size:14px;color:var(--suave);padding:6px 0">Probar con:</span>` +
+    e.atajos.map(n => `<button type="button" data-n="${n}">${n}</button>`).join("");
+
+  document.getElementById("clientes").value = "";
+  document.getElementById("resultado").innerHTML = "";
+  if (!document.getElementById("vista-escenarios").hidden) dibujarEscenarios();
+  if (!document.getElementById("vista-supuestos").hidden) dibujarSupuestos();
+}
+document.getElementById("aviso").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-ir]");
+  if (b) mostrarVista(b.dataset.ir);
+});
+document.getElementById("atajos").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-n]");
+  if (!b) return;
+  document.getElementById("clientes").value = b.dataset.n;
+  calcular();
+});
+
 /* ---------- Pestañas ---------- */
+const VISTAS = ["jornada", "escenarios", "supuestos", "mispa"];
 function mostrarVista(nombre) {
-  for (const v of ["jornada", "escenarios", "supuestos"]) {
+  for (const v of VISTAS) {
     document.getElementById("vista-" + v).hidden = (v !== nombre);
     document.getElementById("t-" + v).setAttribute("aria-selected", v === nombre ? "true" : "false");
   }
   if (nombre === "escenarios") dibujarEscenarios();
   if (nombre === "supuestos") dibujarSupuestos();
+  window.scrollTo(0, 0);
 }
 document.querySelectorAll(".pestanas button").forEach(b =>
   b.addEventListener("click", () => mostrarVista(b.dataset.vista)));
@@ -297,12 +386,16 @@ function barra(nombre, texto, valor, maximo, color) {
 
 const ORO = "#B8923A", TAUPE = "#8C7B6B", ARENA = "#BFA27A", SALVIA = "#6B8F71";
 
+function notaFuente() {
+  return estado.es_ejemplo ? " Fuente: cálculos propios con supuestos de simulación." : "";
+}
+
 /* ---------- Vista: jornada ---------- */
 function dibujarJornada(d) {
   const cont = document.getElementById("resultado");
 
   if (d.estado === "error") {
-    cont.innerHTML = `<p class="error" role="alert">${d.mensaje}</p>`;
+    cont.innerHTML = `<p class="error" role="alert">${esc(d.mensaje)}</p>`;
     return;
   }
 
@@ -321,10 +414,10 @@ function dibujarJornada(d) {
 
   const negativa = d.ganancia_num < 0;
   const filasTrat = d.tratamientos.map(t =>
-    `<tr><td>${t.nombre}</td><td>${t.clientes}</td><td>${t.ingresos}</td></tr>`).join("");
+    `<tr><td>${esc(t.nombre)}</td><td>${t.clientes}</td><td>${t.ingresos}</td></tr>`).join("");
   const maxIng = Math.max(...d.tratamientos.map(t => t.ingresos_num));
   const barrasIng = d.tratamientos.map(t =>
-    barra(t.nombre_corto, t.ingresos, t.ingresos_num, maxIng, ORO)).join("");
+    barra(esc(t.nombre), t.ingresos, t.ingresos_num, maxIng, ORO)).join("");
   const maxCostos = Math.max(d.costo_personal_num, d.costo_insumos_num, d.ganancia_num);
 
   cont.innerHTML = `
@@ -358,8 +451,7 @@ function dibujarJornada(d) {
       <tr><td>Margen sobre ingresos</td><td>${d.margen}</td></tr>
       <tr><td>Utilización de terapeutas</td><td>${d.utilizacion}</td></tr>
     </table>
-    <p class="nota">La ganancia es operativa: no incluye arriendo, servicios públicos ni impuestos.
-      Fuente: cálculos propios con supuestos de simulación.</p>`;
+    <p class="nota">La ganancia es operativa: no incluye arriendo, servicios públicos ni impuestos.${notaFuente()}</p>`;
 }
 
 function calcular() {
@@ -371,11 +463,6 @@ document.getElementById("formulario").addEventListener("submit", e => {
   calcular();
   document.getElementById("clientes").blur();
 });
-document.querySelectorAll(".atajos button").forEach(b =>
-  b.addEventListener("click", () => {
-    document.getElementById("clientes").value = b.dataset.n;
-    calcular();
-  }));
 
 /* ---------- Vista: escenarios ---------- */
 function dibujarEscenarios() {
@@ -408,26 +495,159 @@ function dibujarEscenarios() {
       ${fila("Margen sobre ingresos", "margen")}
       ${fila("Utilización de terapeutas", "utilizacion")}
     </table>
-    <p class="nota">COP por jornada. Los tres escenarios usan la misma función y los mismos supuestos.
-      Fuente: cálculos propios con supuestos de simulación.</p>
+    <p class="nota">COP por jornada. Los escenarios son un tercio, dos tercios y el total de la capacidad máxima del spa,
+      y usan la misma función y los mismos datos.${notaFuente()}</p>
     <h2>Ingresos, costos y ganancia</h2>
     ${grupos}`;
 }
 
-/* ---------- Vista: supuestos ---------- */
+/* ---------- Vista: datos del spa ---------- */
 function dibujarSupuestos() {
   const s = llamar("obtener_supuestos");
-  const filasP = s.personal.map(f => `<tr><td>${f[0]}</td><td>${f[1]}</td></tr>`).join("");
-  const filasT = s.tratamientos.map(f =>
-    `<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[2]}</td><td>${f[3]}</td></tr>`).join("");
+  const celdas = f => f.map(c => `<td>${esc(c)}</td>`).join("");
+  const filasP = s.personal.map(f => `<tr>${celdas(f)}</tr>`).join("");
+  const filasT = s.tratamientos.map(f => `<tr>${celdas(f)}</tr>`).join("");
   document.getElementById("vista-supuestos").innerHTML = `
-    <h2 style="margin-top:0">Supuestos de simulación</h2>
-    <p class="nota" style="margin-top:0">Cifras propuestas por el grupo. No son datos reales de ninguna empresa.</p>
+    <h2 style="margin-top:0">${esc(s.nombre)}</h2>
+    <p class="nota" style="margin-top:0">${estado.es_ejemplo
+      ? "Spa ficticio de ejemplo. Cifras propuestas por el grupo como supuestos de simulación; no son datos reales de ninguna empresa."
+      : "Estos son los datos que usted ingresó. Para cambiarlos, vaya a «Mi spa»."}</p>
     <table><tr><th>Personal y capacidad</th><th>Valor</th></tr>${filasP}</table>
     <h2>Tratamientos</h2>
-    <table><tr><th>Tratamiento</th><th>Precio</th><th>Insumos</th><th>Demanda</th></tr>${filasT}</table>
-    <p class="nota">Para cambiar un supuesto, se modifica el valor en <code>app.py</code>.</p>`;
+    <table><tr><th>Tratamiento</th><th>Precio</th><th>Insumos</th><th>Demanda</th></tr>${filasT}</table>`;
 }
+
+/* ---------- Vista: mi spa (formulario) ---------- */
+const CAMPOS = [
+  { clave: "clientes_por_terapeuta", etiqueta: "Clientes que atiende un terapeuta por turno", ej: "Ej: 3" },
+  { clave: "clientes_por_recepcion", etiqueta: "Clientes por persona de recepción/apoyo", ej: "Ej: 10" },
+  { clave: "costo_turno_terapeuta", etiqueta: "Costo de un turno de terapeuta (COP)", ej: "Ej: 200.000" },
+  { clave: "costo_turno_recepcion", etiqueta: "Costo de un turno de recepción/apoyo (COP)", ej: "Ej: 120.000" },
+  { clave: "cabinas", etiqueta: "Cabinas de tratamiento", ej: "Ej: 8" },
+];
+const EJ_TRATAMIENTOS = ["Ej: Masaje relajante", "Ej: Facial hidratante", "Ej: Ritual corporal"];
+const MAX_TRAT = 6;
+
+function formularioVacio() {
+  return {
+    nombre: "",
+    tratamientos: [
+      { nombre: "", precio: "", insumos: "", porcentaje: "" },
+      { nombre: "", precio: "", insumos: "", porcentaje: "" },
+    ],
+  };
+}
+
+function valor(d, clave) { return esc(d[clave] === undefined || d[clave] === null ? "" : d[clave]); }
+
+function pintarFormulario(d) {
+  const campos = CAMPOS.map(c => `
+    <div class="fila">
+      <label for="f-${c.clave}">${c.etiqueta}</label>
+      <input type="text" id="f-${c.clave}" inputmode="numeric" placeholder="${c.ej}" value="${valor(d, c.clave)}">
+    </div>`).join("");
+
+  const trats = d.tratamientos.map((t, i) => `
+    <div class="trat">
+      <div class="trat-cab"><b>Tratamiento ${i + 1}</b>
+        ${d.tratamientos.length > 1 ? `<button type="button" class="boton-chico" data-quitar="${i}">Quitar</button>` : ""}
+      </div>
+      <div class="fila"><label>Nombre</label>
+        <input type="text" class="t-nombre" maxlength="40" placeholder="${EJ_TRATAMIENTOS[i] || "Ej: Otro tratamiento"}" value="${valor(t, "nombre")}"></div>
+      <div class="dos-col fila">
+        <div><label>Precio por cliente (COP)</label>
+          <input type="text" class="t-precio" inputmode="numeric" placeholder="Ej: 200.000" value="${valor(t, "precio")}"></div>
+        <div><label>Insumos por cliente (COP)</label>
+          <input type="text" class="t-insumos" inputmode="numeric" placeholder="Ej: 30.000" value="${valor(t, "insumos")}"></div>
+      </div>
+      ${i === 0
+        ? `<label>Porcentaje de clientes que lo piden</label><div class="auto">El resto de los clientes (se calcula solo)</div>`
+        : `<label>Porcentaje de clientes que lo piden (0 a 100)</label>
+           <input type="text" class="t-pct" inputmode="numeric" placeholder="Ej: 30" value="${valor(t, "porcentaje")}">`}
+    </div>`).join("");
+
+  document.getElementById("form-spa").innerHTML = `
+    <div class="fila"><label for="f-nombre">Nombre del spa</label>
+      <input type="text" id="f-nombre" maxlength="40" placeholder="Ej: Mi Spa Bogotá" value="${valor(d, "nombre")}"></div>
+
+    <h2>Personal y capacidad</h2>
+    ${campos}
+    <p class="ayuda">La capacidad máxima de la jornada es cabinas × clientes por terapeuta.</p>
+
+    <h2>Tratamientos</h2>
+    <p class="ayuda">El primer tratamiento recibe el resto de los clientes; en los demás escriba qué porcentaje de los clientes lo pide.</p>
+    ${trats}
+    ${d.tratamientos.length < MAX_TRAT ? `<button type="button" class="boton-sec" id="agregar">+ Agregar tratamiento</button>` : ""}
+
+    <div id="mensajes" aria-live="polite"></div>
+    <div class="acciones">
+      <button type="submit" class="boton">Guardar y calcular</button>
+      <button type="button" class="boton-sec" id="copiar-ejemplo">Ver datos del ejemplo</button>
+      <button type="button" class="boton-sec" id="volver-ejemplo">Borrar mis datos</button>
+    </div>`;
+}
+
+function leerFormulario() {
+  const f = document.getElementById("form-spa");
+  const d = { nombre: f.querySelector("#f-nombre").value };
+  CAMPOS.forEach(c => { d[c.clave] = f.querySelector("#f-" + c.clave).value; });
+  d.tratamientos = [...f.querySelectorAll(".trat")].map((el, i) => ({
+    nombre: el.querySelector(".t-nombre").value,
+    precio: el.querySelector(".t-precio").value,
+    insumos: el.querySelector(".t-insumos").value,
+    porcentaje: i === 0 ? "" : el.querySelector(".t-pct").value,
+  }));
+  return d;
+}
+
+function mensaje(html) { document.getElementById("mensajes").innerHTML = html; }
+
+document.getElementById("form-spa").addEventListener("click", ev => {
+  const b = ev.target.closest("button");
+  if (!b) return;
+
+  if (b.id === "agregar") {
+    const d = leerFormulario();
+    d.tratamientos.push({ nombre: "", precio: "", insumos: "", porcentaje: "" });
+    pintarFormulario(d);
+  } else if (b.dataset.quitar !== undefined) {
+    const d = leerFormulario();
+    d.tratamientos.splice(Number(b.dataset.quitar), 1);
+    pintarFormulario(d);
+  } else if (b.id === "copiar-ejemplo") {
+    pintarFormulario(llamar("datos_del_ejemplo"));
+    mensaje(`<div class="exito"><p>Se copiaron los datos del spa de ejemplo. Cámbielos por los de su spa y pulse «Guardar y calcular».</p></div>`);
+  } else if (b.id === "volver-ejemplo") {
+    try { localStorage.removeItem(CLAVE_GUARDADO); } catch (e) {}
+    aplicarSpa(llamar("usar_ejemplo"));
+    pintarFormulario(formularioVacio());
+    mensaje(`<div class="exito"><p>Se borraron los datos de este dispositivo. La app volvió al spa de ejemplo.</p></div>`);
+  } else if (b.id === "ir-jornada") {
+    mostrarVista("jornada");
+  }
+});
+
+document.getElementById("form-spa").addEventListener("submit", ev => {
+  ev.preventDefault();
+  const datos = leerFormulario();
+  const r = llamar("configurar_spa", JSON.stringify(datos));
+
+  if (r.estado === "error") {
+    mensaje(`<div class="alerta" role="alert"><h3>Revise estos datos</h3>
+      <ul>${r.mensajes.map(m => `<li>${esc(m)}</li>`).join("")}</ul></div>`);
+    document.getElementById("mensajes").scrollIntoView({ block: "center" });
+    return;
+  }
+
+  try { localStorage.setItem(CLAVE_GUARDADO, JSON.stringify(datos)); } catch (e) {}
+  aplicarSpa(r);
+  pintarFormulario(llamar("datos_del_spa"));
+  const avisos = r.advertencias.length === 0 ? "" :
+    `<div class="alerta suave"><h3>Tenga en cuenta</h3><ul>${r.advertencias.map(m => `<li>${esc(m)}</li>`).join("")}</ul></div>`;
+  mensaje(`<div class="exito"><p><b>Datos guardados en este dispositivo.</b> La capacidad máxima de ${esc(r.nombre)} es de ${r.capacidad} clientes por jornada.</p>
+    <button type="button" class="boton" id="ir-jornada">Calcular una jornada</button></div>${avisos}`);
+  document.getElementById("mensajes").scrollIntoView({ block: "center" });
+});
 
 /* ---------- Instalación y uso sin internet ---------- */
 if ("serviceWorker" in navigator) {

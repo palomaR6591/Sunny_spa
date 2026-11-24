@@ -1,6 +1,6 @@
 /* Guarda los archivos de la app en el dispositivo para que abra sin internet.
    Si se cambia algún archivo, se debe cambiar también el número de VERSION. */
-const VERSION = "sunny-spa-v1";
+const VERSION = "costos-spa-v2";
 
 const ARCHIVOS = [
   "./",

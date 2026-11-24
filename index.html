@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sunny Side Luxury Spa · Planificador</title>
+<meta name="description" content="Planificador de costos de la jornada de un spa de lujo (spa ficticio, cifras de simulación). Proyecto final ADMI 1301.">
+<meta name="theme-color" content="#2E2620">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sunny Spa">
+<style>
+  :root {
+    --fondo: #FBF7EF;
+    --arena: #F1E8D8;
+    --tinta: #3A3029;
+    --suave: #6F6355;
+    --oro: #B8923A;
+    --oro-texto: #8A6A1F;
+    --taupe: #8C7B6B;
+    --salvia: #6B8F71;
+    --alerta: #9A3B2E;
+    --noche: #2E2620;
+    --linea: #E3D6BC;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--tinta);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.45;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background: var(--noche);
+    color: #F3EBDD;
+    padding: calc(22px + env(safe-area-inset-top)) 20px 20px;
+  }
+  header h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.15;
+    margin: 0 0 4px;
+  }
+  header p { margin: 0; color: #D9B96A; font-size: 15px; }
+  .aviso {
+    background: var(--arena);
+    color: var(--suave);
+    font-size: 13px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--linea);
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 18px 16px 40px; }
+
+  .pestanas {
+    display: flex;
+    gap: 6px;
+    background: var(--arena);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  .pestanas button {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--suave);
+    font: inherit;
+    font-size: 15px;
+    padding: 10px 6px;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .pestanas button[aria-selected="true"] {
+    background: var(--fondo);
+    color: var(--tinta);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(58, 48, 41, .15);
+  }
+
+  h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-size: 22px;
+    margin: 28px 0 10px;
+  }
+  h2::after {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 2px;
+    background: var(--oro);
+    margin-top: 6px;
+  }
+
+  label { display: block; font-size: 17px; margin-bottom: 8px; }
+  .campo { display: flex; gap: 10px; }
+  input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 22px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--linea);
+    border-radius: 10px;
+    background: #FFFDF8;
+    color: var(--tinta);
+  }
+  input[type="text"]:focus { outline: 2px solid var(--oro); border-color: var(--oro); }
+  .boton {
+    font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    background: var(--oro);
+    color: #fff;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 20px;
+    cursor: pointer;
+  }
+  .boton:disabled { opacity: .5; cursor: default; }
+  .atajos { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .atajos button {
+    font: inherit;
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid var(--linea);
+    color: var(--suave);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+
+  .error { color: var(--alerta); margin-top: 12px; font-size: 15px; }
+  .alerta {
+    border: 1.5px solid var(--alerta);
+    background: #FBEFEC;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 20px;
+  }
+  .alerta h3 { margin: 0 0 8px; color: var(--alerta); font-size: 18px; }
+  .alerta p { margin: 6px 0; font-size: 15px; }
+
+  .tarjetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+  .tarjeta {
+    background: #FFFDF8;
+    border: 1px solid var(--linea);
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .tarjeta .valor { font-family: Georgia, serif; font-size: 26px; line-height: 1.1; }
+  .tarjeta .valor.chico { font-size: 19px; padding-top: 5px; }
+  .tarjeta .nombre { font-size: 12.5px; color: var(--suave); margin-top: 4px; }
+  .tarjeta.destacada { background: var(--noche); border-color: var(--noche); color: #F3EBDD; }
+  .tarjeta.destacada .nombre { color: #D9B96A; }
+  .tarjeta.destacada.negativa .valor { color: #F0A89C; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { padding: 9px 6px; text-align: right; border-bottom: 1px solid var(--linea); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--oro-texto); font-weight: 600; font-size: 13px; }
+  tr.fuerte td { font-weight: 700; background: var(--arena); }
+  .escenarios table { font-size: 13px; }
+  .escenarios th, .escenarios td { padding: 8px 3px; }
+
+  .barra-fila { margin: 12px 0; }
+  .barra-fila .texto { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .barra-fila .texto span:last-child { color: var(--suave); }
+  .barra { height: 14px; background: var(--arena); border-radius: 7px; overflow: hidden; }
+  .barra > div { height: 100%; border-radius: 7px; }
+
+  .nota { font-size: 13px; color: var(--suave); margin-top: 10px; }
+  .grupo-escenario { margin-top: 16px; }
+  .grupo-escenario h3 { font-size: 15px; margin: 0 0 4px; color: var(--oro-texto); }
+
+  #cargando { text-align: center; padding: 60px 20px; color: var(--suave); }
+  #cargando .punto {
+    width: 34px; height: 34px; margin: 0 auto 14px;
+    border: 3px solid var(--linea); border-top-color: var(--oro);
+    border-radius: 50%; animation: gira 1s linear infinite;
+  }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  [hidden] { display: none !important; }
+  footer { text-align: center; font-size: 12.5px; color: var(--suave); padding: 0 16px 28px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sunny Side Luxury Spa</h1>
+  <p>Planificador de costos de la jornada</p>
+</header>
+<div class="aviso">Spa ficticio. Todas las cifras son supuestos de simulación del grupo, no datos reales.</div>
+
+<main>
+  <div id="cargando" role="status">
+    <div class="punto"></div>
+    <div id="mensaje-carga">Cargando Python… la primera vez puede tardar unos segundos.</div>
+  </div>
+
+  <div id="app" hidden>
+    <div class="pestanas" role="tablist">
+      <button role="tab" id="t-jornada" aria-selected="true" data-vista="jornada">Jornada</button>
+      <button role="tab" id="t-escenarios" aria-selected="false" data-vista="escenarios">Escenarios</button>
+      <button role="tab" id="t-supuestos" aria-selected="false" data-vista="supuestos">Supuestos</button>
+    </div>
+
+    <section id="vista-jornada">
+      <form id="formulario" autocomplete="off">
+        <label for="clientes">¿Cuántos clientes espera para la jornada?</label>
+        <div class="campo">
+          <input type="text" id="clientes" inputmode="numeric" placeholder="Ej: 10" maxlength="4">
+          <button class="boton" type="submit">Calcular</button>
+        </div>
+        <div class="atajos" aria-label="Ejemplos rápidos">
+          <span style="font-size:14px;color:var(--suave);padding:6px 0">Probar con:</span>
+          <button type="button" data-n="8">8</button>
+          <button type="button" data-n="16">16</button>
+          <button type="button" data-n="24">24</button>
+          <button type="button" data-n="30">30</button>
+        </div>
+      </form>
+      <div id="resultado"></div>
+    </section>
+
+    <section id="vista-escenarios" class="escenarios" hidden></section>
+    <section id="vista-supuestos" hidden></section>
+  </div>
+</main>
+
+<footer>
+  Proyecto final ADMI 1301 · Introducción a la Programación · Universidad de los Andes<br>
+  Los cálculos están escritos en Python (archivo <code>app.py</code>) y se ejecutan en tu dispositivo.
+</footer>
+
+<script src="pyodide/pyodide.js"></script>
+<script>
+/* Esta parte solo conecta la pantalla con el código de Python (app.py).
+   Todos los cálculos se hacen en Python. */
+
+let py = null;
+let funciones = {};
+
+function llamar(nombre, ...argumentos) {
+  const proxy = funciones[nombre](...argumentos);
+  const datos = proxy.toJs({ dict_converter: Object.fromEntries });
+  proxy.destroy();
+  return datos;
+}
+
+async function iniciar() {
+  try {
+    py = await loadPyodide({ indexURL: "pyodide/" });
+    const codigo = await (await fetch("app.py")).text();
+    py.runPython(codigo);
+    funciones.consultar_jornada = py.globals.get("consultar_jornada");
+    funciones.comparar_escenarios = py.globals.get("comparar_escenarios");
+    funciones.obtener_supuestos = py.globals.get("obtener_supuestos");
+
+    document.getElementById("cargando").hidden = true;
+    document.getElementById("app").hidden = false;
+    document.documentElement.setAttribute("data-listo", "si");
+  } catch (e) {
+    document.getElementById("mensaje-carga").textContent =
+      "No se pudo cargar Python. Revisa tu conexión y recarga la página.";
+    console.error(e);
+  }
+}
+
+/* ---------- Pestañas ---------- */
+function mostrarVista(nombre) {
+  for (const v of ["jornada", "escenarios", "supuestos"]) {
+    document.getElementById("vista-" + v).hidden = (v !== nombre);
+    document.getElementById("t-" + v).setAttribute("aria-selected", v === nombre ? "true" : "false");
+  }
+  if (nombre === "escenarios") dibujarEscenarios();
+  if (nombre === "supuestos") dibujarSupuestos();
+}
+document.querySelectorAll(".pestanas button").forEach(b =>
+  b.addEventListener("click", () => mostrarVista(b.dataset.vista)));
+
+/* ---------- Auxiliares de dibujo ---------- */
+function barra(nombre, texto, valor, maximo, color) {
+  const ancho = maximo > 0 ? Math.max(0, valor) / maximo * 100 : 0;
+  return `<div class="barra-fila">
+    <div class="texto"><span>${nombre}</span><span>${texto}</span></div>
+    <div class="barra"><div style="width:${ancho}%;background:${color}"></div></div>
+  </div>`;
+}
+
+const ORO = "#B8923A", TAUPE = "#8C7B6B", ARENA = "#BFA27A", SALVIA = "#6B8F71";
+
+/* ---------- Vista: jornada ---------- */
+function dibujarJornada(d) {
+  const cont = document.getElementById("resultado");
+
+  if (d.estado === "error") {
+    cont.innerHTML = `<p class="error" role="alert">${d.mensaje}</p>`;
+    return;
+  }
+
+  if (d.estado === "no_viable") {
+    cont.innerHTML = `<div class="alerta" role="alert">
+      <h3>No se puede atender esta demanda</h3>
+      <p>Para ${d.clientes} clientes, el spa no tiene capacidad. La capacidad máxima es de
+         <b>${d.capacidad_maxima} clientes</b> por jornada
+         (${d.cabinas} cabinas × ${d.clientes_por_terapeuta} clientes por terapeuta).</p>
+      <p>Quedarían sin atender <b>${d.sin_atender}</b> de ${d.clientes} clientes.</p>
+      <p>No se muestran costos, ingresos ni ganancia, porque esta operación no es viable con la
+         infraestructura disponible. Reduzca la demanda a ${d.capacidad_maxima} clientes o menos.</p>
+    </div>`;
+    return;
+  }
+
+  const negativa = d.ganancia_num < 0;
+  const filasTrat = d.tratamientos.map(t =>
+    `<tr><td>${t.nombre}</td><td>${t.clientes}</td><td>${t.ingresos}</td></tr>`).join("");
+  const maxIng = Math.max(...d.tratamientos.map(t => t.ingresos_num));
+  const barrasIng = d.tratamientos.map(t =>
+    barra(t.nombre_corto, t.ingresos, t.ingresos_num, maxIng, ORO)).join("");
+  const maxCostos = Math.max(d.costo_personal_num, d.costo_insumos_num, d.ganancia_num);
+
+  cont.innerHTML = `
+    <div class="tarjetas">
+      <div class="tarjeta"><div class="valor">${d.terapeutas}</div><div class="nombre">Terapeutas</div></div>
+      <div class="tarjeta"><div class="valor">${d.recepcion}</div><div class="nombre">Recepción y apoyo</div></div>
+      <div class="tarjeta destacada ${negativa ? "negativa" : ""}"><div class="valor chico">${d.ganancia}</div><div class="nombre">Ganancia operativa</div></div>
+    </div>
+
+    <h2>Ingresos por tratamiento</h2>
+    <table>
+      <tr><th>Tratamiento</th><th>Clientes</th><th>Ingresos</th></tr>
+      ${filasTrat}
+      <tr class="fuerte"><td>Ingresos totales</td><td>${d.clientes}</td><td>${d.ingresos_total}</td></tr>
+    </table>
+    ${barrasIng}
+
+    <h2>Costos contemplados</h2>
+    <table>
+      <tr><td>Costo de personal (turnos)</td><td>${d.costo_personal}</td></tr>
+      <tr><td>Costo de insumos</td><td>${d.costo_insumos}</td></tr>
+      <tr class="fuerte"><td>Costos totales</td><td>${d.costos_totales}</td></tr>
+    </table>
+    ${barra("Personal", d.costo_personal, d.costo_personal_num, maxCostos, TAUPE)}
+    ${barra("Insumos", d.costo_insumos, d.costo_insumos_num, maxCostos, ARENA)}
+    ${barra("Ganancia", d.ganancia, d.ganancia_num, maxCostos, SALVIA)}
+
+    <h2>Resultado</h2>
+    <table>
+      <tr><td>Ganancia operativa estimada</td><td><b>${d.ganancia}</b></td></tr>
+      <tr><td>Margen sobre ingresos</td><td>${d.margen}</td></tr>
+      <tr><td>Utilización de terapeutas</td><td>${d.utilizacion}</td></tr>
+    </table>
+    <p class="nota">La ganancia es operativa: no incluye arriendo, servicios públicos ni impuestos.
+      Fuente: cálculos propios con supuestos de simulación.</p>`;
+}
+
+function calcular() {
+  const texto = document.getElementById("clientes").value;
+  dibujarJornada(llamar("consultar_jornada", texto));
+}
+document.getElementById("formulario").addEventListener("submit", e => {
+  e.preventDefault();
+  calcular();
+  document.getElementById("clientes").blur();
+});
+document.querySelectorAll(".atajos button").forEach(b =>
+  b.addEventListener("click", () => {
+    document.getElementById("clientes").value = b.dataset.n;
+    calcular();
+  }));
+
+/* ---------- Vista: escenarios ---------- */
+function dibujarEscenarios() {
+  const lista = llamar("comparar_escenarios");
+  const cabecera = lista.map(e => `<th>${e.escenario}</th>`).join("");
+  const fila = (nombre, campo, clase) =>
+    `<tr${clase ? ` class="${clase}"` : ""}><td>${nombre}</td>${lista.map(e => `<td>${e[campo]}</td>`).join("")}</tr>`;
+
+  const maxIng = Math.max(...lista.map(e => e.ingresos_total_num));
+  const grupos = lista.map(e => {
+    const costos = e.costo_personal_num + e.costo_insumos_num;
+    return `<div class="grupo-escenario"><h3>${e.escenario} (${e.clientes} clientes)</h3>
+      ${barra("Ingresos", e.ingresos_total, e.ingresos_total_num, maxIng, ORO)}
+      ${barra("Costos totales", e.costos_totales, costos, maxIng, TAUPE)}
+      ${barra("Ganancia", e.ganancia, e.ganancia_num, maxIng, SALVIA)}
+    </div>`;
+  }).join("");
+
+  document.getElementById("vista-escenarios").innerHTML = `
+    <h2 style="margin-top:0">Comparación de escenarios</h2>
+    <table>
+      <tr><th></th>${cabecera}</tr>
+      ${fila("Clientes", "clientes")}
+      ${fila("Terapeutas", "terapeutas")}
+      ${fila("Recepción/apoyo", "recepcion")}
+      ${fila("Costo de personal", "costo_personal")}
+      ${fila("Costo de insumos", "costo_insumos")}
+      ${fila("Ingresos totales", "ingresos_total")}
+      ${fila("Ganancia operativa", "ganancia", "fuerte")}
+      ${fila("Margen sobre ingresos", "margen")}
+      ${fila("Utilización de terapeutas", "utilizacion")}
+    </table>
+    <p class="nota">COP por jornada. Los tres escenarios usan la misma función y los mismos supuestos.
+      Fuente: cálculos propios con supuestos de simulación.</p>
+    <h2>Ingresos, costos y ganancia</h2>
+    ${grupos}`;
+}
+
+/* ---------- Vista: supuestos ---------- */
+function dibujarSupuestos() {
+  const s = llamar("obtener_supuestos");
+  const filasP = s.personal.map(f => `<tr><td>${f[0]}</td><td>${f[1]}</td></tr>`).join("");
+  const filasT = s.tratamientos.map(f =>
+    `<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[2]}</td><td>${f[3]}</td></tr>`).join("");
+  document.getElementById("vista-supuestos").innerHTML = `
+    <h2 style="margin-top:0">Supuestos de simulación</h2>
+    <p class="nota" style="margin-top:0">Cifras propuestas por el grupo. No son datos reales de ninguna empresa.</p>
+    <table><tr><th>Personal y capacidad</th><th>Valor</th></tr>${filasP}</table>
+    <h2>Tratamientos</h2>
+    <table><tr><th>Tratamiento</th><th>Precio</th><th>Insumos</th><th>Demanda</th></tr>${filasT}</table>
+    <p class="nota">Para cambiar un supuesto, se modifica el valor en <code>app.py</code>.</p>`;
+}
+
+/* ---------- Instalación y uso sin internet ---------- */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+iniciar();
+</script>
+</body>
+</html>
